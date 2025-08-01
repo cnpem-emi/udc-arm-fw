@@ -57,7 +57,9 @@
 
 #define FREQ_MODULATED          g_controller_ctom.net_signals[6]
 
-#define FREQ_MODULATED_COMPENS  g_controller_ctom.output_signals[0]
+#define FREQ_MODULATED_COMPENS  g_controller_ctom.net_signals[7]
+
+#define FREQ_MODULATED_FF       g_controller_ctom.output_signals[0]
 
 /**
  * Interlocks defines
@@ -132,23 +134,24 @@ static void bsmp_init_server(void)
     create_bsmp_var(38, 0, 4, false, V_DCLINK.u8);
     create_bsmp_var(39, 0, 4, false, FREQ_MODULATED.u8);
     create_bsmp_var(40, 0, 4, false, FREQ_MODULATED_COMPENS.u8);
+    create_bsmp_var(41, 0, 4, false, FREQ_MODULATED_FF.u8);
 
-    create_bsmp_var(41, 0, 4, false, iib_resonant_swls.Vin.u8);
-    create_bsmp_var(42, 0, 4, false, iib_resonant_swls.Vout.u8);
-    create_bsmp_var(43, 0, 4, false, iib_resonant_swls.Iin.u8);
-    create_bsmp_var(44, 0, 4, false, iib_resonant_swls.Iout.u8);
-    create_bsmp_var(45, 0, 4, false, iib_resonant_swls.TempHeatSinkTransformerPfc.u8);
-    create_bsmp_var(46, 0, 4, false, iib_resonant_swls.TempOutputInductor.u8);
-    create_bsmp_var(47, 0, 4, false, iib_resonant_swls.TempHeatSinkDiodes.u8);
-    create_bsmp_var(48, 0, 4, false, iib_resonant_swls.TempHeatSinkClamp.u8);
-    create_bsmp_var(49, 0, 4, false, iib_resonant_swls.DriverAuxVoltage.u8);
-    create_bsmp_var(50, 0, 4, false, iib_resonant_swls.Driver1Current.u8);
-    create_bsmp_var(51, 0, 4, false, iib_resonant_swls.AuxCurrent.u8);
-    create_bsmp_var(52, 0, 4, false, iib_resonant_swls.GroundLeakage.u8);
-    create_bsmp_var(53, 0, 4, false, iib_resonant_swls.BoardTemperature.u8);
-    create_bsmp_var(54, 0, 4, false, iib_resonant_swls.RelativeHumidity.u8);
-    create_bsmp_var(55, 0, 4, false, iib_resonant_swls.InterlocksRegister.u8);
-    create_bsmp_var(56, 0, 4, false, iib_resonant_swls.AlarmsRegister.u8);
+    create_bsmp_var(42, 0, 4, false, iib_resonant_swls.Vin.u8);
+    create_bsmp_var(43, 0, 4, false, iib_resonant_swls.Vout.u8);
+    create_bsmp_var(44, 0, 4, false, iib_resonant_swls.Iin.u8);
+    create_bsmp_var(45, 0, 4, false, iib_resonant_swls.Iout.u8);
+    create_bsmp_var(46, 0, 4, false, iib_resonant_swls.TempHeatSinkTransformerPfc.u8);
+    create_bsmp_var(47, 0, 4, false, iib_resonant_swls.TempOutputInductor.u8);
+    create_bsmp_var(48, 0, 4, false, iib_resonant_swls.TempHeatSinkDiodes.u8);
+    create_bsmp_var(49, 0, 4, false, iib_resonant_swls.TempHeatSinkClamp.u8);
+    create_bsmp_var(50, 0, 4, false, iib_resonant_swls.DriverAuxVoltage.u8);
+    create_bsmp_var(51, 0, 4, false, iib_resonant_swls.Driver1Current.u8);
+    create_bsmp_var(52, 0, 4, false, iib_resonant_swls.AuxCurrent.u8);
+    create_bsmp_var(53, 0, 4, false, iib_resonant_swls.GroundLeakage.u8);
+    create_bsmp_var(54, 0, 4, false, iib_resonant_swls.BoardTemperature.u8);
+    create_bsmp_var(55, 0, 4, false, iib_resonant_swls.RelativeHumidity.u8);
+    create_bsmp_var(56, 0, 4, false, iib_resonant_swls.InterlocksRegister.u8);
+    create_bsmp_var(57, 0, 4, false, iib_resonant_swls.AlarmsRegister.u8);
 }
 
 /**
