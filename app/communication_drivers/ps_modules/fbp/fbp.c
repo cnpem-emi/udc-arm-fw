@@ -233,6 +233,21 @@ static void bsmp_init_server(void)
         create_bsmp_var(71, server, 4, false, g_ipc_ctom.ps_module[PS2_ID].ps_alarms.u8);
         create_bsmp_var(72, server, 4, false, g_ipc_ctom.ps_module[PS3_ID].ps_alarms.u8);
         create_bsmp_var(73, server, 4, false, g_ipc_ctom.ps_module[PS4_ID].ps_alarms.u8);
+
+        create_bsmp_var(74, server, 4, false, g_ipc_ctom.scope[PS1_ID].buffer.p_buf_start.u8);
+        create_bsmp_var(75, server, 4, false, g_ipc_ctom.scope[PS2_ID].buffer.p_buf_start.u8);
+        create_bsmp_var(76, server, 4, false, g_ipc_ctom.scope[PS3_ID].buffer.p_buf_start.u8);
+        create_bsmp_var(77, server, 4, false, g_ipc_ctom.scope[PS4_ID].buffer.p_buf_start.u8);
+
+        create_bsmp_var(78, server, 4, false, g_ipc_ctom.scope[PS1_ID].buffer.p_buf_end.u8);
+        create_bsmp_var(79, server, 4, false, g_ipc_ctom.scope[PS2_ID].buffer.p_buf_end.u8);
+        create_bsmp_var(80, server, 4, false, g_ipc_ctom.scope[PS3_ID].buffer.p_buf_end.u8);
+        create_bsmp_var(81, server, 4, false, g_ipc_ctom.scope[PS4_ID].buffer.p_buf_end.u8);
+
+        create_bsmp_var(82, server, 4, false, g_ipc_ctom.scope[PS1_ID].buffer.p_buf_idx.u8);
+        create_bsmp_var(83, server, 4, false, g_ipc_ctom.scope[PS2_ID].buffer.p_buf_idx.u8);
+        create_bsmp_var(84, server, 4, false, g_ipc_ctom.scope[PS3_ID].buffer.p_buf_idx.u8);
+        create_bsmp_var(85, server, 4, false, g_ipc_ctom.scope[PS4_ID].buffer.p_buf_idx.u8);
     }
 
 }

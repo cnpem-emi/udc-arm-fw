@@ -752,6 +752,45 @@ static struct bsmp_func bsmp_func_cfg_duration_scope = {
     .info.output_size = 1,
 };
 
+uint8_t bsmp_cfg_trig_delay_scope(uint8_t *input, uint8_t *output)
+{
+    ulTimeout=0;
+
+    if(ipc_mtoc_busy(low_priority_msg_to_reg(Cfg_Trig_Delay_Scope)))
+    {
+        *output = 6;
+    }
+    else
+    {
+        g_ipc_mtoc.scope[g_current_ps_id].trig_delay.u32 = (input[3]<< 24) |
+                        (input[2] << 16)|(input[1] << 8) | input[0];
+
+        send_ipc_lowpriority_msg(g_current_ps_id, Cfg_Trig_Delay_Scope);
+
+        while ((HWREG(MTOCIPC_BASE + IPC_O_MTOCIPCFLG) &
+                low_priority_msg_to_reg(Cfg_Trig_Delay_Scope)) &&
+                (ulTimeout<TIMEOUT_DSP_IPC_ACK))
+        {
+            ulTimeout++;
+        }
+        if(ulTimeout == TIMEOUT_DSP_IPC_ACK)
+        {
+            *output = 5;
+        }
+        else
+        {
+            *output = 0;
+        }
+    }
+    return *output;
+}
+
+static struct bsmp_func bsmp_func_cfg_trig_delay_scope = {
+    .func_p           = bsmp_cfg_trig_delay_scope,
+    .info.input_size  = 4,
+    .info.output_size = 1,
+};
+
 /**
  * @brief Enable Samples Buffers
  *
@@ -2379,6 +2418,7 @@ void bsmp_init(uint8_t server)
     bsmp_register_function(&bsmp[server], &bsmp_func_save_dsp_modules_eeprom);  // ID 41
     bsmp_register_function(&bsmp[server], &bsmp_func_load_dsp_modules_eeprom);  // ID 42
     bsmp_register_function(&bsmp[server], &bsmp_func_reset_udc);                // ID 43
+    bsmp_register_function(&bsmp[server], &bsmp_func_cfg_trig_delay_scope);     // ID 44
 
     /**
      * BSMP Variable Register
