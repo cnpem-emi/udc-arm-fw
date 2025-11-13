@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ipc.h"
@@ -86,11 +87,6 @@
 #define V_DCLINK_MOD_3              g_controller_mtoc.net_signals[10] // IIB 3
 #define V_DCLINK_MOD_4              g_controller_mtoc.net_signals[11] // IIB 4
 
-#define IIB_ITLK_REG_MOD_1          g_controller_mtoc.net_signals[12]
-#define IIB_ITLK_REG_MOD_2          g_controller_mtoc.net_signals[13]
-#define IIB_ITLK_REG_MOD_3          g_controller_mtoc.net_signals[14]
-#define IIB_ITLK_REG_MOD_4          g_controller_mtoc.net_signals[15]
-
 #define DUTY_CYCLE_IGBT_1_MOD_1     g_controller_ctom.output_signals[0]
 #define DUTY_CYCLE_IGBT_2_MOD_1     g_controller_ctom.output_signals[1]
 #define DUTY_CYCLE_IGBT_1_MOD_2     g_controller_ctom.output_signals[2]
@@ -150,14 +146,16 @@ typedef enum
     Complementary_PS_Itlk,
 } soft_interlocks_t;
 
+typedef enum
+{
+    High_Sync_Input_Frequency = 0x00000001
+} alarms_t;
+
 static volatile iib_fap_module_t iib_fap_2p2s[4];
-volatile hard_interlocks_t hard_interlocks;
 
 static void init_iib();
 
-static void handle_can_data(uint8_t *data);
-static void handle_can_interlock(uint8_t *data);
-static void handle_can_alarm(uint8_t *data);
+static void handle_can_data(volatile uint8_t *data, volatile unsigned long id);
 
 /**
 * @brief Initialize ADCP Channels.
@@ -256,18 +254,19 @@ static void bsmp_init_server(void)
     create_bsmp_var(62, 0, 4, false, DUTY_CYCLE_IGBT_1_MOD_4.u8);
     create_bsmp_var(63, 0, 4, false, DUTY_CYCLE_IGBT_2_MOD_4.u8);
 
-    create_bsmp_var(64, 0, 4, false, iib_fap_2p2s[0].Vin.u8);
-    create_bsmp_var(65, 0, 4, false, iib_fap_2p2s[0].Vout.u8);
-    create_bsmp_var(66, 0, 4, false, iib_fap_2p2s[0].IoutA1.u8);
-    create_bsmp_var(67, 0, 4, false, iib_fap_2p2s[0].IoutA2.u8);
-    create_bsmp_var(68, 0, 4, false, iib_fap_2p2s[0].TempIGBT1.u8);
-    create_bsmp_var(69, 0, 4, false, iib_fap_2p2s[0].TempIGBT2.u8);
-    create_bsmp_var(70, 0, 4, false, iib_fap_2p2s[0].DriverVoltage.u8);
-    create_bsmp_var(71, 0, 4, false, iib_fap_2p2s[0].Driver1Current.u8);
-    create_bsmp_var(72, 0, 4, false, iib_fap_2p2s[0].Driver2Current.u8);
-    create_bsmp_var(73, 0, 4, false, iib_fap_2p2s[0].TempL.u8);
-    create_bsmp_var(74, 0, 4, false, iib_fap_2p2s[0].TempHeatSink.u8);
-    create_bsmp_var(75, 0, 4, false, iib_fap_2p2s[0].GroundLeakage.u8);
+    create_bsmp_var(64, 0, 4, false, iib_fap_2p2s[0].GroundLeakage.u8);
+
+    create_bsmp_var(65, 0, 4, false, iib_fap_2p2s[0].Vin.u8);
+    create_bsmp_var(66, 0, 4, false, iib_fap_2p2s[0].Vout.u8);
+    create_bsmp_var(67, 0, 4, false, iib_fap_2p2s[0].IoutA1.u8);
+    create_bsmp_var(68, 0, 4, false, iib_fap_2p2s[0].IoutA2.u8);
+    create_bsmp_var(69, 0, 4, false, iib_fap_2p2s[0].TempIGBT1.u8);
+    create_bsmp_var(70, 0, 4, false, iib_fap_2p2s[0].TempIGBT2.u8);
+    create_bsmp_var(71, 0, 4, false, iib_fap_2p2s[0].DriverVoltage.u8);
+    create_bsmp_var(72, 0, 4, false, iib_fap_2p2s[0].Driver1Current.u8);
+    create_bsmp_var(73, 0, 4, false, iib_fap_2p2s[0].Driver2Current.u8);
+    create_bsmp_var(74, 0, 4, false, iib_fap_2p2s[0].TempL.u8);
+    create_bsmp_var(75, 0, 4, false, iib_fap_2p2s[0].TempHeatSink.u8);
     create_bsmp_var(76, 0, 4, false, iib_fap_2p2s[0].BoardTemperature.u8);
     create_bsmp_var(77, 0, 4, false, iib_fap_2p2s[0].RelativeHumidity.u8);
     create_bsmp_var(78, 0, 4, false, iib_fap_2p2s[0].InterlocksRegister.u8);
@@ -284,45 +283,44 @@ static void bsmp_init_server(void)
     create_bsmp_var(88, 0, 4, false, iib_fap_2p2s[1].Driver2Current.u8);
     create_bsmp_var(89, 0, 4, false, iib_fap_2p2s[1].TempL.u8);
     create_bsmp_var(90, 0, 4, false, iib_fap_2p2s[1].TempHeatSink.u8);
-    create_bsmp_var(91, 0, 4, false, iib_fap_2p2s[1].GroundLeakage.u8);
-    create_bsmp_var(92, 0, 4, false, iib_fap_2p2s[1].BoardTemperature.u8);
-    create_bsmp_var(93, 0, 4, false, iib_fap_2p2s[1].RelativeHumidity.u8);
-    create_bsmp_var(94, 0, 4, false, iib_fap_2p2s[1].InterlocksRegister.u8);
-    create_bsmp_var(95, 0, 4, false, iib_fap_2p2s[1].AlarmsRegister.u8);
+    create_bsmp_var(91, 0, 4, false, iib_fap_2p2s[1].BoardTemperature.u8);
+    create_bsmp_var(92, 0, 4, false, iib_fap_2p2s[1].RelativeHumidity.u8);
+    create_bsmp_var(93, 0, 4, false, iib_fap_2p2s[1].InterlocksRegister.u8);
+    create_bsmp_var(94, 0, 4, false, iib_fap_2p2s[1].AlarmsRegister.u8);
 
-    create_bsmp_var(96, 0, 4, false, iib_fap_2p2s[2].Vin.u8);
-    create_bsmp_var(97, 0, 4, false, iib_fap_2p2s[2].Vout.u8);
-    create_bsmp_var(98, 0, 4, false, iib_fap_2p2s[2].IoutA1.u8);
-    create_bsmp_var(99, 0, 4, false, iib_fap_2p2s[2].IoutA2.u8);
-    create_bsmp_var(100, 0, 4, false, iib_fap_2p2s[2].TempIGBT1.u8);
-    create_bsmp_var(101, 0, 4, false, iib_fap_2p2s[2].TempIGBT2.u8);
-    create_bsmp_var(102, 0, 4, false, iib_fap_2p2s[2].DriverVoltage.u8);
-    create_bsmp_var(103, 0, 4, false, iib_fap_2p2s[2].Driver1Current.u8);
-    create_bsmp_var(104, 0, 4, false, iib_fap_2p2s[2].Driver2Current.u8);
-    create_bsmp_var(105, 0, 4, false, iib_fap_2p2s[2].TempL.u8);
-    create_bsmp_var(106, 0, 4, false, iib_fap_2p2s[2].TempHeatSink.u8);
-    create_bsmp_var(107, 0, 4, false, iib_fap_2p2s[2].GroundLeakage.u8);
-    create_bsmp_var(108, 0, 4, false, iib_fap_2p2s[2].BoardTemperature.u8);
-    create_bsmp_var(109, 0, 4, false, iib_fap_2p2s[2].RelativeHumidity.u8);
-    create_bsmp_var(110, 0, 4, false, iib_fap_2p2s[2].InterlocksRegister.u8);
-    create_bsmp_var(111, 0, 4, false, iib_fap_2p2s[2].AlarmsRegister.u8);
+    create_bsmp_var(95, 0, 4, false, iib_fap_2p2s[2].Vin.u8);
+    create_bsmp_var(96, 0, 4, false, iib_fap_2p2s[2].Vout.u8);
+    create_bsmp_var(97, 0, 4, false, iib_fap_2p2s[2].IoutA1.u8);
+    create_bsmp_var(98, 0, 4, false, iib_fap_2p2s[2].IoutA2.u8);
+    create_bsmp_var(99, 0, 4, false, iib_fap_2p2s[2].TempIGBT1.u8);
+    create_bsmp_var(100, 0, 4, false, iib_fap_2p2s[2].TempIGBT2.u8);
+    create_bsmp_var(101, 0, 4, false, iib_fap_2p2s[2].DriverVoltage.u8);
+    create_bsmp_var(102, 0, 4, false, iib_fap_2p2s[2].Driver1Current.u8);
+    create_bsmp_var(103, 0, 4, false, iib_fap_2p2s[2].Driver2Current.u8);
+    create_bsmp_var(104, 0, 4, false, iib_fap_2p2s[2].TempL.u8);
+    create_bsmp_var(105, 0, 4, false, iib_fap_2p2s[2].TempHeatSink.u8);
+    create_bsmp_var(106, 0, 4, false, iib_fap_2p2s[2].BoardTemperature.u8);
+    create_bsmp_var(107, 0, 4, false, iib_fap_2p2s[2].RelativeHumidity.u8);
+    create_bsmp_var(108, 0, 4, false, iib_fap_2p2s[2].InterlocksRegister.u8);
+    create_bsmp_var(109, 0, 4, false, iib_fap_2p2s[2].AlarmsRegister.u8);
 
-    create_bsmp_var(112, 0, 4, false, iib_fap_2p2s[3].Vin.u8);
-    create_bsmp_var(113, 0, 4, false, iib_fap_2p2s[3].Vout.u8);
-    create_bsmp_var(114, 0, 4, false, iib_fap_2p2s[3].IoutA1.u8);
-    create_bsmp_var(115, 0, 4, false, iib_fap_2p2s[3].IoutA2.u8);
-    create_bsmp_var(116, 0, 4, false, iib_fap_2p2s[3].TempIGBT1.u8);
-    create_bsmp_var(117, 0, 4, false, iib_fap_2p2s[3].TempIGBT2.u8);
-    create_bsmp_var(118, 0, 4, false, iib_fap_2p2s[3].DriverVoltage.u8);
-    create_bsmp_var(119, 0, 4, false, iib_fap_2p2s[3].Driver1Current.u8);
-    create_bsmp_var(120, 0, 4, false, iib_fap_2p2s[3].Driver2Current.u8);
-    create_bsmp_var(121, 0, 4, false, iib_fap_2p2s[3].TempL.u8);
-    create_bsmp_var(122, 0, 4, false, iib_fap_2p2s[3].TempHeatSink.u8);
-    create_bsmp_var(123, 0, 4, false, iib_fap_2p2s[3].GroundLeakage.u8);
-    create_bsmp_var(124, 0, 4, false, iib_fap_2p2s[3].BoardTemperature.u8);
-    create_bsmp_var(125, 0, 4, false, iib_fap_2p2s[3].RelativeHumidity.u8);
-    create_bsmp_var(126, 0, 4, false, iib_fap_2p2s[3].InterlocksRegister.u8);
-    create_bsmp_var(127, 0, 4, false, iib_fap_2p2s[3].AlarmsRegister.u8);
+    create_bsmp_var(110, 0, 4, false, iib_fap_2p2s[3].Vin.u8);
+    create_bsmp_var(111, 0, 4, false, iib_fap_2p2s[3].Vout.u8);
+    create_bsmp_var(112, 0, 4, false, iib_fap_2p2s[3].IoutA1.u8);
+    create_bsmp_var(113, 0, 4, false, iib_fap_2p2s[3].IoutA2.u8);
+    create_bsmp_var(114, 0, 4, false, iib_fap_2p2s[3].TempIGBT1.u8);
+    create_bsmp_var(115, 0, 4, false, iib_fap_2p2s[3].TempIGBT2.u8);
+    create_bsmp_var(116, 0, 4, false, iib_fap_2p2s[3].DriverVoltage.u8);
+    create_bsmp_var(117, 0, 4, false, iib_fap_2p2s[3].Driver1Current.u8);
+    create_bsmp_var(118, 0, 4, false, iib_fap_2p2s[3].Driver2Current.u8);
+    create_bsmp_var(119, 0, 4, false, iib_fap_2p2s[3].TempL.u8);
+    create_bsmp_var(120, 0, 4, false, iib_fap_2p2s[3].TempHeatSink.u8);
+    create_bsmp_var(121, 0, 4, false, iib_fap_2p2s[3].BoardTemperature.u8);
+    create_bsmp_var(122, 0, 4, false, iib_fap_2p2s[3].RelativeHumidity.u8);
+    create_bsmp_var(123, 0, 4, false, iib_fap_2p2s[3].InterlocksRegister.u8);
+    create_bsmp_var(124, 0, 4, false, iib_fap_2p2s[3].AlarmsRegister.u8);
+
+    create_bsmp_var(125, 0, 4, false, g_ipc_ctom.ps_module[0].ps_alarms.u8);
 }
 
 /**
@@ -357,152 +355,148 @@ static void init_iib()
     iib_fap_2p2s[3].CanAddress = 4;
 
     init_iib_module_can_data(&g_iib_module_can_data, &handle_can_data);
-    init_iib_module_can_interlock(&g_iib_module_can_interlock, &handle_can_interlock);
-    init_iib_module_can_alarm(&g_iib_module_can_alarm, &handle_can_alarm);
 }
 
-static void handle_can_data(uint8_t *data)
+static void handle_can_data(volatile uint8_t *data, volatile unsigned long id)
 {
-    uint8_t module;
+    volatile uint8_t module;
 
-    module = data[0] - 1;
+    volatile unsigned long can_module = id;
+    volatile unsigned long id_var = 0;
 
-    switch(data[1])
+    switch(can_module)
+    {
+    	case 10:
+    	case 11:
+    	case 12:
+    	case 13:
+    	case 14:
+    	case 15:
+    	case 16:
+    	case 17:
+    	{
+    		module = 0;
+    		id_var = (id - 10);
+    		break;
+    	}
+    	case 20:
+    	case 21:
+    	case 22:
+    	case 23:
+    	case 24:
+    	case 25:
+    	case 26:
+    	case 27:
+    	{
+    		module = 1;
+    		id_var = (id - 20);
+    		break;
+    	}
+    	case 30:
+    	case 31:
+    	case 32:
+    	case 33:
+    	case 34:
+    	case 35:
+    	case 36:
+    	case 37:
+    	{
+    		module = 2;
+    		id_var = (id - 30);
+    		break;
+    	}
+    	case 40:
+    	case 41:
+    	case 42:
+    	case 43:
+    	case 44:
+    	case 45:
+    	case 46:
+    	case 47:
+    	{
+    		module = 3;
+    		id_var = (id - 40);
+    		break;
+    	}
+
+    	default:
+    	{
+    		break;
+    	}
+    }
+
+    switch(id_var)
     {
         case 0:
         {
-            memcpy(iib_fap_2p2s[module].Vin.u8, &data[4], 4);
-            memcpy( (&V_DCLINK_MOD_1.f + module) , &data[4], 4);
+            memcpy((void *)iib_fap_2p2s[module].Vin.u8, (const void *)&data[0], (size_t)4);
+            memcpy((void *)(&V_DCLINK_MOD_1.f + module), (const void *)&data[0], (size_t)4);
+            memcpy((void *)iib_fap_2p2s[module].Vout.u8, (const void *)&data[4], (size_t)4);
+
             break;
         }
         case 1:
         {
-            memcpy(iib_fap_2p2s[module].Vout.u8, &data[4], 4);
-            break;
+        	memcpy((void *)iib_fap_2p2s[module].IoutA1.u8, (const void *)&data[0], (size_t)4);
+        	memcpy((void *)iib_fap_2p2s[module].IoutA2.u8, (const void *)&data[4], (size_t)4);
+
+        	break;
         }
         case 2:
         {
-            memcpy(iib_fap_2p2s[module].IoutA1.u8, &data[4], 4);
+        	memcpy((void *)iib_fap_2p2s[module].DriverVoltage.u8, (const void *)&data[0], (size_t)4);
+        	memcpy((void *)iib_fap_2p2s[module].GroundLeakage.u8, (const void *)&data[4], (size_t)4);
+
             break;
         }
         case 3:
         {
-            memcpy(iib_fap_2p2s[module].IoutA2.u8, &data[4], 4);
+        	memcpy((void *)iib_fap_2p2s[module].Driver1Current.u8, (const void *)&data[0], (size_t)4);
+        	memcpy((void *)iib_fap_2p2s[module].Driver2Current.u8, (const void *)&data[4], (size_t)4);
+
             break;
         }
         case 4:
         {
-            memcpy(iib_fap_2p2s[module].TempIGBT1.u8, &data[4], 4);
+            memcpy((void *)iib_fap_2p2s[module].TempIGBT1.u8, (const void *)&data[0], (size_t)4);
+            memcpy((void *)iib_fap_2p2s[module].TempIGBT2.u8, (const void *)&data[4], (size_t)4);
+
             break;
         }
         case 5:
         {
-            memcpy(iib_fap_2p2s[module].TempIGBT2.u8, &data[4], 4);
+        	memcpy((void *)iib_fap_2p2s[module].TempL.u8, (const void *)&data[0], (size_t)4);
+        	memcpy((void *)iib_fap_2p2s[module].TempHeatSink.u8, (const void *)&data[4], (size_t)4);
+
             break;
         }
         case 6:
         {
-            memcpy(iib_fap_2p2s[module].DriverVoltage.u8, &data[4], 4);
-            break;
+        	memcpy((void *)iib_fap_2p2s[module].BoardTemperature.u8, (const void *)&data[0], (size_t)4);
+        	memcpy((void *)iib_fap_2p2s[module].RelativeHumidity.u8, (const void *)&data[4], (size_t)4);
+
+        	break;
         }
         case 7:
         {
-            memcpy(iib_fap_2p2s[module].Driver1Current.u8, &data[4], 4);
-            break;
-        }
-        case 8:
-        {
-            memcpy(iib_fap_2p2s[module].Driver2Current.u8, &data[4], 4);
-            break;
-        }
-        case 9:
-        {
-            memcpy(iib_fap_2p2s[module].TempL.u8, &data[4], 4);
-            break;
-        }
-        case 10:
-        {
-            memcpy(iib_fap_2p2s[module].TempHeatSink.u8, &data[4], 4);
-            break;
-        }
-        case 11:
-        {
-            memcpy(iib_fap_2p2s[module].GroundLeakage.u8, &data[4], 4);
-            break;
-        }
-        case 12:
-        {
-            memcpy(iib_fap_2p2s[module].BoardTemperature.u8, &data[4], 4);
-            break;
-        }
-        case 13:
-        {
-            memcpy(iib_fap_2p2s[module].RelativeHumidity.u8, &data[4], 4);
-            break;
-        }
+        	memcpy((void *)iib_fap_2p2s[module].InterlocksRegister.u8, (const void *)&data[0], (size_t)4);
+        	memcpy((void *)iib_fap_2p2s[module].AlarmsRegister.u8, (const void *)&data[4], (size_t)4);
 
+        	if(iib_fap_2p2s[module].InterlocksRegister.u32 > 0)
+        	{
+        		set_hard_interlock(0, IIB_Mod_1_Itlk + module);
+        	}
+
+        	else
+        	{
+        		iib_fap_2p2s[module].InterlocksRegister.u32 = 0;
+        	}
+
+            break;
+        }
         default:
         {
             break;
         }
-    }
-}
-
-static void handle_can_interlock(uint8_t *data)
-{
-    uint8_t module;
-
-    module = data[0] - 1;
-
-    switch (data[1])
-    {
-        case 0:
-        {
-            if(g_can_reset_flag[module])
-            {
-                memcpy(iib_fap_2p2s[module].InterlocksRegister.u8, &data[4], 4);
-                set_hard_interlock(0, IIB_Mod_1_Itlk + module);
-            }
-            break;
-        }
-
-        case 1:
-        {
-            g_can_reset_flag[module] = 1;
-            iib_fap_2p2s[module].InterlocksRegister.u32 = 0;
-            break;
-        }
-
-        default:
-        {
-            break;
-        }
-    }
-}
-
-static void handle_can_alarm(uint8_t *data)
-{
-    uint8_t module;
-
-    module = data[0] - 1;
-
-    switch(data[1])
-    {
-       case 0:
-       {
-           memcpy(iib_fap_2p2s[module].AlarmsRegister.u8, &data[4], 4);
-           break;
-       }
-
-       case 1:
-       {
-           iib_fap_2p2s[module].AlarmsRegister.u32 = 0;
-           break;
-       }
-
-       default:
-       {
-           break;
-       }
     }
 }

@@ -82,10 +82,6 @@ extern unsigned long RamfuncsLoadStart;
 extern unsigned long RamfuncsRunStart;
 extern unsigned long RamfuncsLoadSize;
 
-#define M3_MASTER 0
-#define C28_MASTER 1
-
-
 int main(void) {
 	
 	volatile unsigned long ulLoop;
@@ -118,6 +114,8 @@ int main(void) {
 	// Details of how c28 uses these memory sections is defined
 	// in the c28 linker file.
 	RAMMReqSharedMemAccess((S1_ACCESS | S6_ACCESS | S7_ACCESS), C28_MASTER);
+
+	IntMasterDisable();
 
 	init_system();
 
@@ -233,11 +231,11 @@ int main(void) {
      *  estimated based on measurements of initialization time.
      */
     SysCtlDelay(150000);
-    //GPIOPinWrite(DEBUG_BASE, DEBUG_PIN, ON);
     get_firmwares_version();
 
     /// Enable processor interrupts.
-    IntMasterEnable();
+
+	IntMasterEnable();
 
     for (;;)
     {

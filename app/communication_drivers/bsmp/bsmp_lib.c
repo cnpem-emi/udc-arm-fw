@@ -1487,8 +1487,6 @@ uint8_t bsmp_set_slowref_fbp_readback_mon(uint8_t *input, uint8_t *output)
         g_ipc_mtoc.ps_module[3].ps_setpoint.u32 = (input[15]<< 24) |
                 (input[14] << 16) | (input[13] << 8) | input[12];
 
-        GPIOPinWrite(DEBUG_BASE, DEBUG_PIN, ON);
-
         send_ipc_lowpriority_msg(0, Set_SlowRef_All_PS);
 
         while ((HWREG(MTOCIPC_BASE + IPC_O_MTOCIPCFLG) &
@@ -1497,8 +1495,6 @@ uint8_t bsmp_set_slowref_fbp_readback_mon(uint8_t *input, uint8_t *output)
         {
             ulTimeout++;
         }
-
-        GPIOPinWrite(DEBUG_BASE, DEBUG_PIN, OFF);
 
         if(ulTimeout==TIMEOUT_DSP_IPC_ACK)
         {
@@ -1601,8 +1597,6 @@ uint8_t bsmp_set_slowref_fbp_readback_ref(uint8_t *input, uint8_t *output)
         g_ipc_mtoc.ps_module[3].ps_setpoint.u32 = (input[15]<< 24) |
                 (input[14] << 16) | (input[13] << 8) | input[12];
 
-        GPIOPinWrite(DEBUG_BASE, DEBUG_PIN, ON);
-
         send_ipc_lowpriority_msg(0, Set_SlowRef_All_PS);
 
         while ((HWREG(MTOCIPC_BASE + IPC_O_MTOCIPCFLG) &
@@ -1611,8 +1605,6 @@ uint8_t bsmp_set_slowref_fbp_readback_ref(uint8_t *input, uint8_t *output)
         {
             ulTimeout++;
         }
-
-        GPIOPinWrite(DEBUG_BASE, DEBUG_PIN, OFF);
 
         if(ulTimeout==TIMEOUT_DSP_IPC_ACK)
         {
@@ -2419,7 +2411,7 @@ void bsmp_init(uint8_t server)
     create_bsmp_var(25, server, 4, false, g_ipc_ctom.scope[server].timeslicer.freq_sampling.u8);
     create_bsmp_var(26, server, 4, false, g_ipc_ctom.scope[server].duration.u8);
     create_bsmp_var(27, server, 4, false, g_ipc_ctom.scope[server].p_source.u8);
-    create_bsmp_var(28, server, 1, false, &dummy_u8);   // Reserved common variable
+    create_bsmp_var(28, server, 4, false, g_ipc_ctom.period_sync_pulse.u8);
     create_bsmp_var(29, server, 1, false, &dummy_u8);   // Reserved common variable
     create_bsmp_var(30, server, 1, false, &dummy_u8);   // Reserved common variable
 

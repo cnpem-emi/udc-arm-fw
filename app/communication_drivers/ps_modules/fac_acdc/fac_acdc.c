@@ -1,5 +1,4 @@
 /******************************************************************************
-/******************************************************************************
  * Copyright (C) 2018 by LNLS - Brazilian Synchrotron Light Laboratory
  *
  * Redistribution, modification or use of this software in source or binary
@@ -23,6 +22,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ipc.h"
@@ -73,18 +73,12 @@ typedef enum
     IIB_Cmd_Itlk
 } hard_interlocks_t;
 
-/*typedef enum
-{
-} soft_interlocks_t;*/
-
-volatile iib_fac_is_t iib_fac_is;
-volatile iib_fac_cmd_t iib_fac_cmd;
+static volatile iib_fac_is_t iib_fac_is;
+static volatile iib_fac_cmd_t iib_fac_cmd;
 
 static void init_iib_modules();
 
-static void handle_can_data(uint8_t *data);
-static void handle_can_interlock(uint8_t *data);
-static void handle_can_alarm(uint8_t *data);
+static void handle_can_data(volatile uint8_t *data, volatile unsigned long id);
 
 /**
 * @brief Initialize ADCP Channels.
@@ -170,69 +164,102 @@ static void init_iib_modules()
     iib_fac_cmd.CanAddress = IIB_CMD_ADDRESS;
 
     init_iib_module_can_data(&g_iib_module_can_data, &handle_can_data);
-    init_iib_module_can_interlock(&g_iib_module_can_interlock, &handle_can_interlock);
-    init_iib_module_can_alarm(&g_iib_module_can_alarm, &handle_can_alarm);
 }
 
-static void handle_can_data(uint8_t *data)
+static void handle_can_data(volatile uint8_t *data, volatile unsigned long id)
 {
-    uint8_t iib_address;
-    uint8_t data_id;
+    volatile uint8_t module;
 
-    iib_address = data[0];
-    data_id    = data[1];
+    volatile unsigned long can_module = id;
+    volatile unsigned long id_var = 0;
 
-    switch(iib_address)
+    switch(can_module)
     {
-        /// Data from FAC IS
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        {
+            module = IIB_IS_ADDRESS;
+            id_var = (id - 10);
+            break;
+        }
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        {
+            module = IIB_CMD_ADDRESS;
+            id_var = (id - 20);
+            break;
+        }
+
+        default:
+        {
+            break;
+        }
+    }
+
+    switch(module)
+    {
         case IIB_IS_ADDRESS:
         {
-            switch(data_id)
+            switch(id_var)
             {
                 case 0:
                 {
-                    memcpy(iib_fac_is.Vin.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_is.Vin.u8, (const void *) &data[0], (size_t) 4);
                     VOUT_RECT.f = iib_fac_is.Vin.f;
+                    memcpy((void *) iib_fac_is.DriverVoltage.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 1:
                 {
-                    memcpy(iib_fac_is.Iin.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_is.Iin.u8, (const void *) &data[0], 4);
+                    memcpy((void *) iib_fac_is.DriverCurrent.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 2:
                 {
-                    memcpy(iib_fac_is.TempIGBT.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_is.TempIGBT.u8, (const void *) &data[0], (size_t) 4);
                     break;
                 }
+
                 case 3:
                 {
-                    memcpy(iib_fac_is.DriverVoltage.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_is.TempL.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_is.TempHeatsink.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 4:
                 {
-                    memcpy(iib_fac_is.DriverCurrent.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_is.BoardTemperature.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_is.RelativeHumidity.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 5:
                 {
-                    memcpy(iib_fac_is.TempL.u8, &data[4], 4);
-                    break;
-                }
-                case 6:
-                {
-                    memcpy(iib_fac_is.TempHeatsink.u8, &data[4], 4);
-                    break;
-                }
-                case 7:
-                {
-                    memcpy(iib_fac_is.BoardTemperature.u8, &data[4], 4);
-                    break;
-                }
-                case 8:
-                {
-                    memcpy(iib_fac_is.RelativeHumidity.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_is.InterlocksRegister.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_is.AlarmsRegister.u8, (const void *) &data[4], (size_t) 4);
+
+                    if(iib_fac_is.InterlocksRegister.u32 > 0)
+                    {
+                        set_hard_interlock(0, IIB_IS_Itlk);
+                    }
+
+                    else
+                    {
+                        iib_fac_is.InterlocksRegister.u32 = 0;
+                    }
+
                     break;
                 }
 
@@ -245,59 +272,60 @@ static void handle_can_data(uint8_t *data)
             break;
         }
 
-        /// Data from FAC Cmd
         case IIB_CMD_ADDRESS:
         {
-            switch(data_id)
+            switch(id_var)
             {
                 case 0:
                 {
-                    memcpy(iib_fac_cmd.VcapBank.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_cmd.VcapBank.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_cmd.Vout.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 1:
                 {
-                    memcpy(iib_fac_cmd.Vout.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_cmd.AuxiliaryBoardCurrent.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_cmd.IDBBoardCurrent.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 2:
                 {
-                    memcpy(iib_fac_cmd.ExternalBoardsVoltage.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_cmd.ExternalBoardsVoltage.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_cmd.GroundLeakage.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 3:
                 {
-                    memcpy(iib_fac_cmd.AuxiliaryBoardCurrent.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_cmd.TempRectInductor.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_cmd.TempRectHeatSink.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 4:
                 {
-                    memcpy(iib_fac_cmd.IDBBoardCurrent.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_cmd.BoardTemperature.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_cmd.RelativeHumidity.u8, (const void *) &data[4], (size_t) 4);
                     break;
                 }
+
                 case 5:
                 {
-                    memcpy(iib_fac_cmd.GroundLeakage.u8, &data[4], 4);
-                    break;
-                }
-                case 6:
-                {
-                    memcpy(iib_fac_cmd.TempRectInductor.u8, &data[4], 4);
-                    break;
-                }
-                case 7:
-                {
-                    memcpy(iib_fac_cmd.TempRectHeatSink.u8, &data[4], 4);
-                    break;
-                }
-                case 8:
-                {
-                    memcpy(iib_fac_cmd.BoardTemperature.u8, &data[4], 4);
-                    break;
-                }
-                case 9:
-                {
-                    memcpy(iib_fac_cmd.RelativeHumidity.u8, &data[4], 4);
+                    memcpy((void *) iib_fac_cmd.InterlocksRegister.u8, (const void *) &data[0], (size_t) 4);
+                    memcpy((void *) iib_fac_cmd.AlarmsRegister.u8, (const void *) &data[4], (size_t) 4);
+
+                    if(iib_fac_cmd.InterlocksRegister.u32 > 0)
+                    {
+                        set_hard_interlock(0, IIB_Cmd_Itlk);
+                    }
+
+                    else
+                    {
+                        iib_fac_cmd.InterlocksRegister.u32 = 0;
+                    }
+
                     break;
                 }
 
@@ -308,146 +336,6 @@ static void handle_can_data(uint8_t *data)
             }
 
             break;
-        }
-
-        default:
-        {
-            break;
-        }
-    }
-}
-
-static void handle_can_interlock(uint8_t *data)
-{
-    uint8_t iib_address;
-    uint8_t data_id;
-
-    iib_address = data[0];
-    data_id    = data[1];
-
-    switch(iib_address)
-    {
-        /// Interlocks from FAC IS
-        case IIB_IS_ADDRESS:
-        {
-            switch(data_id)
-            {
-               case 0:
-               {
-                   if(g_can_reset_flag[0])
-                   {
-                       memcpy(iib_fac_is.InterlocksRegister.u8, &data[4], 4);
-                       set_hard_interlock(0, IIB_IS_Itlk);
-                   }
-                   break;
-               }
-
-               case 1:
-               {
-                   g_can_reset_flag[0] = 1;
-                   iib_fac_is.InterlocksRegister.u32 = 0;
-                   break;
-               }
-
-               default:
-               {
-                   break;
-               }
-            }
-        }
-
-        /// Interlocks from FAC Cmd
-        case IIB_CMD_ADDRESS:
-        {
-            switch(data_id)
-            {
-               case 0:
-               {
-                   if(g_can_reset_flag[1])
-                   {
-                       memcpy(iib_fac_cmd.InterlocksRegister.u8, &data[4], 4);
-                       set_hard_interlock(0, IIB_Cmd_Itlk);
-                   }
-                   break;
-               }
-
-               case 1:
-               {
-                   g_can_reset_flag[1] = 1;
-                   iib_fac_cmd.InterlocksRegister.u32 = 0;
-                   break;
-               }
-
-               default:
-               {
-                   break;
-               }
-            }
-        }
-
-        default:
-        {
-            break;
-        }
-    }
-}
-
-static void handle_can_alarm(uint8_t *data)
-{
-    uint8_t iib_address;
-    uint8_t data_id;
-
-    iib_address = data[0];
-    data_id    = data[1];
-
-    switch(iib_address)
-    {
-        /// Alarms from FAC IS
-        case IIB_IS_ADDRESS:
-        {
-            switch(data_id)
-            {
-               case 0:
-               {
-                   memcpy(iib_fac_is.AlarmsRegister.u8, &data[4], 4);
-                   break;
-               }
-
-               case 1:
-               {
-                   iib_fac_is.AlarmsRegister.u32 = 0;
-                   break;
-               }
-
-               default:
-               {
-                   break;
-               }
-            }
-        }
-
-        /// Alarms from FAC Cmd
-        case IIB_CMD_ADDRESS:
-        {
-            switch(data_id)
-            {
-               case 0:
-               {
-                   memcpy(iib_fac_cmd.AlarmsRegister.u8, &data[4], 4);
-                   break;
-               }
-
-               case 1:
-               {
-                   iib_fac_cmd.AlarmsRegister.u32 = 0;
-                   break;
-               }
-
-               default:
-               {
-                   break;
-               }
-            }
         }
 
         default:

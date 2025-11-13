@@ -57,8 +57,6 @@ void isr_global_timer(void)
 	// Apaga a interrup��o do timer 0 A
 	TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 
-	//GPIOPinWrite(DEBUG_BASE, DEBUG_PIN, ON);
-
 	adcp_read();
 	//TaskSetNew(SAMPLE_ADCP);
 
@@ -72,7 +70,7 @@ void isr_global_timer(void)
 	{
 		time = 0;
 		TaskSetNew(SAMPLE_RTC);
-		TaskSetNew(POWER_TEMP_SAMPLE);
+		//TaskSetNew(POWER_TEMP_SAMPLE);
 		#if HARDWARE_VERSION == 0x21
 		    TaskSetNew(LED_STATUS);
 			#endif
