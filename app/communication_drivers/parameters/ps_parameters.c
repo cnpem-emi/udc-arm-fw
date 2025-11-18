@@ -11,7 +11,7 @@
 /**
  * @file ps_parameters.c
  * @brief Power supply parameters bank module.
- * 
+ *
  * This module implements a data structure for initialization and configuration
  * of parameters for operation of the power supplies applications.
  *
@@ -62,47 +62,48 @@ static const uint16_t param_addresses_onboard_eeprom[NUM_MAX_PARAMETERS] =
     [Min_Ref] = 0x00B0,
     [Max_Ref_OpenLoop] = 0x00C0,
     [Min_Ref_OpenLoop] = 0x00D0,
+    [Max_Current_Step] = 0x00E0,
 
-    [PWM_Freq] = 0x00E0,
-    [PWM_DeadTime] = 0x00E4,
-    [PWM_Max_Duty] = 0x00E8,
-    [PWM_Min_Duty] = 0x00EC,
-    [PWM_Max_Duty_OpenLoop] = 0x00F0,
-    [PWM_Min_Duty_OpenLoop] = 0x00F4,
-    [PWM_Lim_Duty_Share] = 0x00F8,
+    [PWM_Freq] = 0x00F0,
+    [PWM_DeadTime] = 0x00F4,
+    [PWM_Max_Duty] = 0x00F8,
+    [PWM_Min_Duty] = 0x00FC,
+    [PWM_Max_Duty_OpenLoop] = 0x0100,
+    [PWM_Min_Duty_OpenLoop] = 0x0104,
+    [PWM_Lim_Duty_Share] = 0x0108,
 
-    [HRADC_Num_Boards] = 0x0100,
-    [HRADC_Freq_SPICLK] = 0x0102,
-    [HRADC_Freq_Sampling] = 0x0104,
-    [HRADC_Enable_Heater] = 0x0108,
-    [HRADC_Enable_Monitor] = 0x0110,
-    [HRADC_Type_Transducer] = 0x0118,
-    [HRADC_Gain_Transducer] = 0x0120,
-    [HRADC_Offset_Transducer] = 0x0130,
+    [HRADC_Num_Boards] = 0x0110,
+    [HRADC_Freq_SPICLK] = 0x0112,
+    [HRADC_Freq_Sampling] = 0x0114,
+    [HRADC_Enable_Heater] = 0x0118,
+    [HRADC_Enable_Monitor] = 0x0120,
+    [HRADC_Type_Transducer] = 0x0128,
+    [HRADC_Gain_Transducer] = 0x0130,
+    [HRADC_Offset_Transducer] = 0x0140,
 
-    [SigGen_Type] = 0x0140,
-    [SigGen_Num_Cycles] = 0x0142,
-    [SigGen_Freq] = 0x0144,
-    [SigGen_Amplitude] = 0x0148,
-    [SigGen_Offset] = 0x014C,
-    [SigGen_Aux_Param] = 0x0150,
+    [SigGen_Type] = 0x0150,
+    [SigGen_Num_Cycles] = 0x0152,
+    [SigGen_Freq] = 0x0154,
+    [SigGen_Amplitude] = 0x0158,
+    [SigGen_Offset] = 0x015C,
+    [SigGen_Aux_Param] = 0x0160,
 
-    [WfmRef_Selected] = 0x01C0,
-    [WfmRef_SyncMode] = 0x01C8,
-    [WfmRef_Frequency] = 0x1D0,
-    [WfmRef_Gain] = 0x01E0,
-    [WfmRef_Offset] = 0x1F0,
+    [WfmRef_Selected] = 0x01D0,
+    [WfmRef_SyncMode] = 0x01D8,
+    [WfmRef_Frequency] = 0x01E0,
+    [WfmRef_Gain] = 0x01F0,
+    [WfmRef_Offset] = 0x0200,
 
-    [Analog_Var_Max] = 0x200,
-    [Analog_Var_Min] = 0x300,
+    [Analog_Var_Max] = 0x0210,
+    [Analog_Var_Min] = 0x0310,
 
-    [Hard_Interlocks_Debounce_Time] = 0x400,
-    [Hard_Interlocks_Reset_Time] = 0x480,
-    [Soft_Interlocks_Debounce_Time] = 0x500,
-    [Soft_Interlocks_Reset_Time] = 0x580,
+    [Hard_Interlocks_Debounce_Time] = 0x0410,
+    [Hard_Interlocks_Reset_Time] = 0x0490,
+    [Soft_Interlocks_Debounce_Time] = 0x0510,
+    [Soft_Interlocks_Reset_Time] = 0x0590,
 
-    [Scope_Sampling_Frequency] = 0x740,
-    [Scope_Source] = 0x750,
+    [Scope_Sampling_Frequency] = 0x0750,
+    [Scope_Source] = 0x0760,
 
     [Password] = 0x1FFD,
     [Enable_Onboard_EEPROM] = 0x1FFF
@@ -130,47 +131,48 @@ static const uint16_t param_addresses_offboard_eeprom[NUM_MAX_PARAMETERS] =
      [Min_Ref] = 0x00B0,
      [Max_Ref_OpenLoop] = 0x00C0,
      [Min_Ref_OpenLoop] = 0x00D0,
+     [Max_Current_Step] = 0x00E0,
 
-     [PWM_Freq] = 0x00E0,
-     [PWM_DeadTime] = 0x00E4,
-     [PWM_Max_Duty] = 0x00E8,
-     [PWM_Min_Duty] = 0x00EC,
-     [PWM_Max_Duty_OpenLoop] = 0x00F0,
-     [PWM_Min_Duty_OpenLoop] = 0x00F4,
-     [PWM_Lim_Duty_Share] = 0x00F8,
+     [PWM_Freq] = 0x00F0,
+     [PWM_DeadTime] = 0x00F4,
+     [PWM_Max_Duty] = 0x00F8,
+     [PWM_Min_Duty] = 0x00FC,
+     [PWM_Max_Duty_OpenLoop] = 0x0100,
+     [PWM_Min_Duty_OpenLoop] = 0x0104,
+     [PWM_Lim_Duty_Share] = 0x0108,
 
-     [HRADC_Num_Boards] = 0x0100,
-     [HRADC_Freq_SPICLK] = 0x0102,
-     [HRADC_Freq_Sampling] = 0x0104,
-     [HRADC_Enable_Heater] = 0x0108,
-     [HRADC_Enable_Monitor] = 0x0110,
-     [HRADC_Type_Transducer] = 0x0118,
-     [HRADC_Gain_Transducer] = 0x0120,
-     [HRADC_Offset_Transducer] = 0x0130,
+     [HRADC_Num_Boards] = 0x0110,
+     [HRADC_Freq_SPICLK] = 0x0112,
+     [HRADC_Freq_Sampling] = 0x0114,
+     [HRADC_Enable_Heater] = 0x0118,
+     [HRADC_Enable_Monitor] = 0x0120,
+     [HRADC_Type_Transducer] = 0x0128,
+     [HRADC_Gain_Transducer] = 0x0130,
+     [HRADC_Offset_Transducer] = 0x0140,
 
-     [SigGen_Type] = 0x0140,
-     [SigGen_Num_Cycles] = 0x0142,
-     [SigGen_Freq] = 0x0144,
-     [SigGen_Amplitude] = 0x0148,
-     [SigGen_Offset] = 0x014C,
-     [SigGen_Aux_Param] = 0x0150,
+     [SigGen_Type] = 0x0150,
+     [SigGen_Num_Cycles] = 0x0152,
+     [SigGen_Freq] = 0x0154,
+     [SigGen_Amplitude] = 0x0158,
+     [SigGen_Offset] = 0x015C,
+     [SigGen_Aux_Param] = 0x0160,
 
-     [WfmRef_Selected] = 0x01C0,
-     [WfmRef_SyncMode] = 0x01C8,
-     [WfmRef_Frequency] = 0x1D0,
-     [WfmRef_Gain] = 0x01E0,
-     [WfmRef_Offset] = 0x1F0,
+     [WfmRef_Selected] = 0x01D0,
+     [WfmRef_SyncMode] = 0x01D8,
+     [WfmRef_Frequency] = 0x01E0,
+     [WfmRef_Gain] = 0x01F0,
+     [WfmRef_Offset] = 0x0200,
 
-     [Analog_Var_Max] = 0x200,
-     [Analog_Var_Min] = 0x300,
+     [Analog_Var_Max] = 0x0210,
+     [Analog_Var_Min] = 0x0310,
 
-     [Hard_Interlocks_Debounce_Time] = 0x400,
-     [Hard_Interlocks_Reset_Time] = 0x480,
-     [Soft_Interlocks_Debounce_Time] = 0x500,
-     [Soft_Interlocks_Reset_Time] = 0x580,
+     [Hard_Interlocks_Debounce_Time] = 0x0410,
+     [Hard_Interlocks_Reset_Time] = 0x0490,
+     [Soft_Interlocks_Debounce_Time] = 0x0510,
+     [Soft_Interlocks_Reset_Time] = 0x0590,
 
-     [Scope_Sampling_Frequency] = 0x740,
-     [Scope_Source] = 0x750,
+     [Scope_Sampling_Frequency] = 0x0750,
+     [Scope_Source] = 0x0760,
 };
 
 static uint8_t data_eeprom[32];
@@ -227,6 +229,8 @@ static void init_param_bank_info(void)
     init_param(Max_Ref_OpenLoop, is_float, 4, &MAX_REF_OL[0].u8[0]);
 
     init_param(Min_Ref_OpenLoop, is_float, 4, &MIN_REF_OL[0].u8[0]);
+
+    init_param(Max_Current_Step, is_float, 4, &MAX_CURRENT_STEP[0].u8[0]);
 
     /**
      * PWM parameters

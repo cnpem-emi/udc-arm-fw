@@ -11,7 +11,7 @@
 /**
  * @file ps_parameters.h
  * @brief Power supply parameters bank module.
- * 
+ *
  * This module implements a data structure for initialization and configuration
  * of parameters for operation of the power supplies applications.
  *
@@ -76,6 +76,7 @@
 #define MIN_REF                     g_param_bank.control.min_ref
 #define MAX_REF_OL                  g_param_bank.control.max_ref_openloop
 #define MIN_REF_OL                  g_param_bank.control.min_ref_openloop
+#define MAX_CURRENT_STEP            g_param_bank.control.max_current_step
 /*#define MAX_SLEWRATE_SLOWREF        g_param_bank.control.slewrate_slowref
 #define MAX_SLEWRATE_SIGGEN_AMP     g_param_bank.control.slewrate_siggen_amp
 #define MAX_SLEWRATE_SIGGEN_OFFSET  g_param_bank.control.slewrate_siggen_offset
@@ -179,6 +180,7 @@ typedef enum
     Min_Ref,
     Max_Ref_OpenLoop,
     Min_Ref_OpenLoop,
+    Max_Current_Step,
 
     PWM_Freq,
     PWM_DeadTime,
@@ -274,6 +276,7 @@ typedef struct
     u_float_t   min_ref[NUM_MAX_PS_MODULES];
     u_float_t   max_ref_openloop[NUM_MAX_PS_MODULES];
     u_float_t   min_ref_openloop[NUM_MAX_PS_MODULES];
+    u_float_t   max_current_step[NUM_MAX_PS_MODULES];
     u_float_t   slewrate_slowref;
     u_float_t   slewrate_siggen_amp;
     u_float_t   slewrate_siggen_offset;
