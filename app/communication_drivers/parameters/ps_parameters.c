@@ -62,7 +62,7 @@ static const uint16_t param_addresses_onboard_eeprom[NUM_MAX_PARAMETERS] =
     [Min_Ref] = 0x00B0,
     [Max_Ref_OpenLoop] = 0x00C0,
     [Min_Ref_OpenLoop] = 0x00D0,
-    [Max_Current_Step] = 0x00E0,
+    [Max_Output_Change] = 0x00E0,
 
     [PWM_Freq] = 0x00F0,
     [PWM_DeadTime] = 0x00F4,
@@ -131,7 +131,7 @@ static const uint16_t param_addresses_offboard_eeprom[NUM_MAX_PARAMETERS] =
      [Min_Ref] = 0x00B0,
      [Max_Ref_OpenLoop] = 0x00C0,
      [Min_Ref_OpenLoop] = 0x00D0,
-     [Max_Current_Step] = 0x00E0,
+     [Max_Output_Change] = 0x00E0,
 
      [PWM_Freq] = 0x00F0,
      [PWM_DeadTime] = 0x00F4,
@@ -230,7 +230,7 @@ static void init_param_bank_info(void)
 
     init_param(Min_Ref_OpenLoop, is_float, 4, &MIN_REF_OL[0].u8[0]);
 
-    init_param(Max_Current_Step, is_float, 4, &MAX_CURRENT_STEP[0].u8[0]);
+    init_param(Max_Output_Change, is_float, 4, &MAX_OUTPUT_CHANGE[0].u8[0]);
 
     /**
      * PWM parameters
