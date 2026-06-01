@@ -22,9 +22,9 @@
  *
  */
 
-#ifndef RESONANT_SWLS_H_
-#define RESONANT_SWLS_H_
+#ifndef RESONANT_WEG_H_
+#define RESONANT_WEG_H_
 
-void resonant_swls_system_config(void);
+void resonant_weg_system_config(void);
 
 #endif /* RESONANT_SWLS_H_ */
