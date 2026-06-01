@@ -77,7 +77,7 @@
 #include "communication_drivers/ps_modules/fap_4p/fap_4p.h"
 #include "communication_drivers/ps_modules/fbp/fbp.h"
 #include "communication_drivers/ps_modules/fbp_dclink/fbp_dclink.h"
-#include "communication_drivers/ps_modules/resonant_swls/resonant_swls.h"
+#include "communication_drivers/ps_modules/resonant_weg/resonant_weg.h"
 
 extern unsigned long RamfuncsLoadStart;
 extern unsigned long RamfuncsRunStart;
@@ -216,9 +216,9 @@ int main(void) {
             break;
         }
 
-        case RESONANT_SWLS:
+        case RESONANT_WEG:
         {
-            resonant_swls_system_config();
+            resonant_weg_system_config();
             break;
         }
 
