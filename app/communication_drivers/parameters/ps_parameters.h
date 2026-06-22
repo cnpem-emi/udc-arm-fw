@@ -11,7 +11,7 @@
 /**
  * @file ps_parameters.h
  * @brief Power supply parameters bank module.
- * 
+ *
  * This module implements a data structure for initialization and configuration
  * of parameters for operation of the power supplies applications.
  *

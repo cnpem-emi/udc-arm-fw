@@ -11,7 +11,7 @@
 /**
  * @file ps_parameters.c
  * @brief Power supply parameters bank module.
- * 
+ *
  * This module implements a data structure for initialization and configuration
  * of parameters for operation of the power supplies applications.
  *
@@ -89,20 +89,20 @@ static const uint16_t param_addresses_onboard_eeprom[NUM_MAX_PARAMETERS] =
 
     [WfmRef_Selected] = 0x01C0,
     [WfmRef_SyncMode] = 0x01C8,
-    [WfmRef_Frequency] = 0x1D0,
+    [WfmRef_Frequency] = 0x01D0,
     [WfmRef_Gain] = 0x01E0,
-    [WfmRef_Offset] = 0x1F0,
+    [WfmRef_Offset] = 0x01F0,
 
-    [Analog_Var_Max] = 0x200,
-    [Analog_Var_Min] = 0x300,
+    [Analog_Var_Max] = 0x0200,
+    [Analog_Var_Min] = 0x0300,
 
-    [Hard_Interlocks_Debounce_Time] = 0x400,
-    [Hard_Interlocks_Reset_Time] = 0x480,
-    [Soft_Interlocks_Debounce_Time] = 0x500,
-    [Soft_Interlocks_Reset_Time] = 0x580,
+    [Hard_Interlocks_Debounce_Time] = 0x0400,
+    [Hard_Interlocks_Reset_Time] = 0x0480,
+    [Soft_Interlocks_Debounce_Time] = 0x0500,
+    [Soft_Interlocks_Reset_Time] = 0x0580,
 
-    [Scope_Sampling_Frequency] = 0x740,
-    [Scope_Source] = 0x750,
+    [Scope_Sampling_Frequency] = 0x0740,
+    [Scope_Source] = 0x0750,
 
     [Password] = 0x1FFD,
     [Enable_Onboard_EEPROM] = 0x1FFF
@@ -157,20 +157,20 @@ static const uint16_t param_addresses_offboard_eeprom[NUM_MAX_PARAMETERS] =
 
      [WfmRef_Selected] = 0x01C0,
      [WfmRef_SyncMode] = 0x01C8,
-     [WfmRef_Frequency] = 0x1D0,
+     [WfmRef_Frequency] = 0x01D0,
      [WfmRef_Gain] = 0x01E0,
-     [WfmRef_Offset] = 0x1F0,
+     [WfmRef_Offset] = 0x01F0,
 
-     [Analog_Var_Max] = 0x200,
-     [Analog_Var_Min] = 0x300,
+     [Analog_Var_Max] = 0x0200,
+     [Analog_Var_Min] = 0x0300,
 
-     [Hard_Interlocks_Debounce_Time] = 0x400,
-     [Hard_Interlocks_Reset_Time] = 0x480,
-     [Soft_Interlocks_Debounce_Time] = 0x500,
-     [Soft_Interlocks_Reset_Time] = 0x580,
+     [Hard_Interlocks_Debounce_Time] = 0x0400,
+     [Hard_Interlocks_Reset_Time] = 0x0480,
+     [Soft_Interlocks_Debounce_Time] = 0x0500,
+     [Soft_Interlocks_Reset_Time] = 0x0580,
 
-     [Scope_Sampling_Frequency] = 0x740,
-     [Scope_Source] = 0x750,
+     [Scope_Sampling_Frequency] = 0x0740,
+     [Scope_Source] = 0x0750,
 };
 
 static uint8_t data_eeprom[32];
