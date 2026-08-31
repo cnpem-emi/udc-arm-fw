@@ -198,6 +198,7 @@ void TaskCheck(void)
 
             case FAC_ACDC:
             case FAC_2S_DCDC:
+            case FAC_2P_DCDC_IMAS:
             {
                 send_reset_iib_message(1);
                 SysCtlDelay(1000);
@@ -209,6 +210,7 @@ void TaskCheck(void)
             case FAC_2P4S_ACDC:
             case FAP_4P:
             case FAP_2P2S:
+            case FAC_2P_ACDC_IMAS:
             {
                 send_reset_iib_message(1);
                 SysCtlDelay(1000);
