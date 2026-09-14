@@ -74,7 +74,8 @@ typedef enum
 	Opened_Contactor_K1_Fault,
 	Opened_Contactor_K2_Fault,
 	External_Itlk,
-	IIB_Itlk
+	IIB_Itlk,
+	QDS_Itlk
 } hard_interlocks_t;
 
 typedef enum
